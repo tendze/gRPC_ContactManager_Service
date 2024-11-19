@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/gRPC_ContactManagement_Service.iml" filepath="$PROJECT_DIR$/.idea/gRPC_ContactManagement_Service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gRPC_ContactManager_Service/.idea/gRPC_ContactManager_Service.iml" filepath="$PROJECT_DIR$/../gRPC_ContactManager_Service/.idea/gRPC_ContactManager_Service.iml" />
     </modules>
   </component>
 </project>

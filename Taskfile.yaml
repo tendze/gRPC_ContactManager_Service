@@ -1,0 +1,7 @@
+version: 3
+
+tasks:
+  cm:
+    desc: "starts Contact Manager service"
+    cmds:
+      - go run ./cmd/contact-manager/main.go --config=./config/local.yaml
