@@ -1,10 +1,13 @@
 package main
 
 import (
+	"gRPC_ContactManagement_Service/internal/app"
 	"gRPC_ContactManagement_Service/internal/config"
 	"gRPC_ContactManagement_Service/internal/lib/logger/handlers/slogpretty"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
@@ -20,6 +23,18 @@ func main() {
 	// TODO: LOGGER
 	log := setupLogger(cfg.Env)
 	log.Info("logger setup")
+
+	// TODO: INIT APP
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+	go application.GRPCSrv.MustRun()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	<-stop
+
+	application.GRPCSrv.Stop()
+	log.Info("application stopped")
 }
 
 func setupLogger(env string) *slog.Logger {
