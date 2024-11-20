@@ -3,7 +3,6 @@ package app
 import (
 	grpcapp "gRPC_ContactManagement_Service/internal/app/grpc"
 	"log/slog"
-	"time"
 )
 
 type App struct {
@@ -14,7 +13,6 @@ func New(
 	log *slog.Logger,
 	port int,
 	storagePath string,
-	tokenTTL time.Duration,
 ) *App {
 	// TODO: init storage
 	// TODO: init cm service

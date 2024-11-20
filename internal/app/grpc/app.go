@@ -17,10 +17,11 @@ type App struct {
 // TODO: add new param CMService when you implement
 func New(
 	log *slog.Logger,
+	cm cmgrpc.ContactManager,
 	port int,
 ) *App {
 	gRPC := grpc.NewServer()
-	cmgrpc.Register(gRPC)
+	cmgrpc.Register(gRPC, cm)
 	return &App{
 		log:        log,
 		gRPCServer: gRPC,

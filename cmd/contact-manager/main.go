@@ -25,7 +25,7 @@ func main() {
 	log.Info("logger setup")
 
 	// TODO: INIT APP
-	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath)
 	go application.GRPCSrv.MustRun()
 
 	stop := make(chan os.Signal, 1)
