@@ -18,21 +18,25 @@ type ContactManager interface {
 
 	GetContactByName(
 		ctx context.Context,
+		creatorEmail string,
 		name string,
 	) (models.Contact, error)
 
 	GetContactByEmail(
 		ctx context.Context,
+		creatorEmail string,
 		email string,
 	) (models.Contact, error)
 
 	GetContactByPhone(
 		ctx context.Context,
+		creatorEmail string,
 		phone string,
 	) (models.Contact, error)
 
 	DeleteContact(
 		ctx context.Context,
+		creatorEmail string,
 		id int64,
 	) error
 }

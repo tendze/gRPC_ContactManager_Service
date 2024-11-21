@@ -27,16 +27,22 @@ type ContactSaver interface {
 type ContactProvider interface {
 	Contact(
 		ctx context.Context,
-		name, email, phone string,
+		creatorEmail, name, email, phone string,
 	) (models.Contact, error)
 }
 
 type ContactDeleter interface {
 	Delete(
 		ctx context.Context,
-		name, email, phone string,
+		creatorEmail string,
+		id int64,
 	) error
 }
+
+var (
+	ErrContactExists   = errors.New("contact exists")
+	ErrContactNotFound = errors.New("contact not found")
+)
 
 func New(
 	log *slog.Logger,
@@ -66,38 +72,91 @@ func (cmg *ContactManager) CreateContact(
 	if err != nil {
 		if errors.Is(err, storage.ErrContactExists) {
 			log.Warn("contact already exists", sl.Err(err))
-			return -1, fmt.Errorf("%s: %w", op, storage.ErrContactExists)
+			return -1, fmt.Errorf("%s: %w", op, ErrContactExists)
 		}
 		log.Error("failed to save contact", sl.Err(err))
-		return -1, fmt.Errorf("%s: %w", op, storage.ErrContactExists)
+		return -1, fmt.Errorf("%s: %w", op, err)
 	}
 	return uid, nil
 }
 
 func (cmg *ContactManager) GetContactByName(
 	ctx context.Context,
-	name string,
+	creatorEmail, name string,
 ) (models.Contact, error) {
-	panic("implement me")
+	const op = "cm.GetContactByName"
+	log := cmg.log.With(
+		slog.String("op", op),
+	)
+	log.Info("searching for contact", slog.String("name", name))
+
+	contact, err := cmg.contactProvider.Contact(ctx, creatorEmail, name, "", "")
+	if err != nil {
+		if errors.Is(err, storage.ErrContactNotFound) {
+			return models.Contact{}, fmt.Errorf("%s: %w", op, ErrContactNotFound)
+		}
+		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+	}
+	return contact, nil
 }
 
 func (cmg *ContactManager) GetContactByEmail(
 	ctx context.Context,
-	email string,
+	creatorEmail, email string,
 ) (models.Contact, error) {
-	panic("implement me")
+	const op = "cm.GetContactByEmail"
+	log := cmg.log.With(
+		slog.String("op", op),
+	)
+	log.Info("searching for contact", slog.String("email", email))
+
+	contact, err := cmg.contactProvider.Contact(ctx, creatorEmail, "", email, "")
+	if err != nil {
+		if errors.Is(err, storage.ErrContactNotFound) {
+			return models.Contact{}, fmt.Errorf("%s: %w", op, ErrContactNotFound)
+		}
+		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+	}
+	return contact, nil
 }
 
 func (cmg *ContactManager) GetContactByPhone(
 	ctx context.Context,
-	email string,
+	creatorEmail, phone string,
 ) (models.Contact, error) {
-	panic("implement me")
+	const op = "cm.GetContactByPhone"
+	log := cmg.log.With(
+		slog.String("op", op),
+	)
+	log.Info("searching for contact", slog.String("phone", phone))
+
+	contact, err := cmg.contactProvider.Contact(ctx, creatorEmail, "", "", phone)
+	if err != nil {
+		if errors.Is(err, storage.ErrContactNotFound) {
+			return models.Contact{}, fmt.Errorf("%s: %w", op, ErrContactNotFound)
+		}
+		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+	}
+	return contact, nil
 }
 
 func (cmg *ContactManager) DeleteContact(
 	ctx context.Context,
+	creatorEmail string,
 	id int64,
 ) error {
-	panic("implement me")
+	const op = "cm.DeleteContact"
+	log := cmg.log.With(
+		slog.String("op", op),
+	)
+	log.Info("trying to delete contact")
+
+	err := cmg.contactDeleter.Delete(ctx, creatorEmail, id)
+	if err != nil {
+		if errors.Is(err, storage.ErrContactNotFound) {
+			return ErrContactNotFound
+		}
+		return err
+	}
+	return nil
 }
