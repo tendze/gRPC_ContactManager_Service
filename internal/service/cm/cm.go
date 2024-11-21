@@ -2,7 +2,11 @@ package cm
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"gRPC_ContactManagement_Service/internal/domain/models"
+	"gRPC_ContactManagement_Service/internal/lib/logger/sl"
+	"gRPC_ContactManagement_Service/internal/storage"
 	"log/slog"
 )
 
@@ -16,7 +20,7 @@ type ContactManager struct {
 type ContactSaver interface {
 	SaveContact(
 		ctx context.Context,
-		name, email, phone string,
+		creatorEmail, name, email, phone string,
 	) (uid int64, err error)
 }
 
@@ -50,9 +54,24 @@ func New(
 
 func (cmg *ContactManager) CreateContact(
 	ctx context.Context,
-	name, email, phone string,
+	creatorEmail, name, email, phone string,
 ) (int64, error) {
-	panic("implement me")
+	const op = "cm.CreateContact"
+	log := cmg.log.With(
+		slog.String("op", op),
+	)
+	log.Info("creating contact")
+
+	uid, err := cmg.contactSaver.SaveContact(ctx, creatorEmail, name, email, phone)
+	if err != nil {
+		if errors.Is(err, storage.ErrContactExists) {
+			log.Warn("contact already exists", sl.Err(err))
+			return -1, fmt.Errorf("%s: %w", op, storage.ErrContactExists)
+		}
+		log.Error("failed to save contact", sl.Err(err))
+		return -1, fmt.Errorf("%s: %w", op, storage.ErrContactExists)
+	}
+	return uid, nil
 }
 
 func (cmg *ContactManager) GetContactByName(

@@ -7,12 +7,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"regexp"
 )
 
 type ContactManager interface {
 	CreateContact(
 		ctx context.Context,
-		name, email, phone string,
+		creatorEmail, name, email, phone string,
 	) (uid int64, err error)
 
 	GetContactByName(
@@ -52,6 +53,13 @@ func (s *serverAPI) CreateContact(
 	if err := validateCreateContactRequest(req); err != nil {
 		return nil, err
 	}
+	if err := validateEmail(req.GetEmail()); err != nil {
+		return nil, err
+	}
+	if err := validatePhone(req.GetPhone()); err != nil {
+		return nil, err
+	}
+
 	// TODO: implement
 	return &cmv1.CreateContactResponse{}, nil
 }
@@ -109,6 +117,23 @@ func validateCreateContactRequest(req *cmv1.CreateContactRequest) error {
 	}
 	if req.GetPhone() == "" {
 		return status.Error(codes.InvalidArgument, "phone required")
+	}
+	return nil
+}
+
+func validateEmail(email string) error {
+	// Регулярное выражение для проверки email
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	if !re.MatchString(email) {
+		return status.Error(codes.InvalidArgument, "invalid email format")
+	}
+	return nil
+}
+
+func validatePhone(phone string) error {
+	re := regexp.MustCompile(`^\+7\d{10}$`)
+	if !re.MatchString(phone) {
+		return status.Error(codes.InvalidArgument, "invalid phone format")
 	}
 	return nil
 }
