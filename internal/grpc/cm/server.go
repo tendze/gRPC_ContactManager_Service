@@ -203,7 +203,6 @@ func validateCreateContactRequest(req *cmv1.CreateContactRequest) error {
 }
 
 func validateEmail(email string) error {
-	// Регулярное выражение для проверки email
 	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !re.MatchString(email) {
 		return status.Error(codes.InvalidArgument, "invalid email format")

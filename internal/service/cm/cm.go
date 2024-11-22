@@ -32,7 +32,7 @@ type ContactProvider interface {
 }
 
 type ContactDeleter interface {
-	Delete(
+	DeleteContact(
 		ctx context.Context,
 		creatorEmail string,
 		id int64,
@@ -151,7 +151,7 @@ func (cmg *ContactManager) DeleteContact(
 	)
 	log.Info("trying to delete contact")
 
-	err := cmg.contactDeleter.Delete(ctx, creatorEmail, id)
+	err := cmg.contactDeleter.DeleteContact(ctx, creatorEmail, id)
 	if err != nil {
 		if errors.Is(err, storage.ErrContactNotFound) {
 			return ErrContactNotFound
