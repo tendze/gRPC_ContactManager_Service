@@ -2,13 +2,17 @@ package cm
 
 import (
 	"context"
+	"errors"
 	"gRPC_ContactManagement_Service/internal/domain/models"
+	"gRPC_ContactManagement_Service/internal/service/cm"
 	cmv1 "github.com/tendze/gRPC_ContactManager_Protos/gen/go/cm"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"regexp"
 )
+
+const emailContextKey = "email"
 
 type ContactManager interface {
 	CreateContact(
@@ -63,9 +67,18 @@ func (s *serverAPI) CreateContact(
 	if err := validatePhone(req.GetPhone()); err != nil {
 		return nil, err
 	}
-
-	// TODO: implement
-	return &cmv1.CreateContactResponse{}, nil
+	creatorEmail, ok := ctx.Value(emailContextKey).(string)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot get user email")
+	}
+	uid, err := s.cm.CreateContact(ctx, creatorEmail, req.GetName(), req.GetEmail(), req.GetPhone())
+	if err != nil {
+		if errors.Is(err, cm.ErrContactExists) {
+			return nil, status.Error(codes.AlreadyExists, "contact already exists")
+		}
+		return nil, status.Error(codes.Internal, "cannot add new contact")
+	}
+	return &cmv1.CreateContactResponse{Id: uid, Success: true}, nil
 }
 
 func (s *serverAPI) GetContactByName(
