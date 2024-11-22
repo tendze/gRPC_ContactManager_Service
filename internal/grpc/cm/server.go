@@ -172,7 +172,21 @@ func (s *serverAPI) DeleteContact(
 		return nil, status.Error(codes.InvalidArgument, "id required")
 	}
 
-	return &cmv1.DeleteContactResponse{}, nil
+	creatorEmail, err := getEmailFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.cm.DeleteContact(ctx, creatorEmail, req.GetId())
+
+	if err != nil {
+		if errors.Is(err, cm.ErrContactNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "contact not found")
+		}
+		return nil, status.Error(codes.Internal, "cannot find contact")
+	}
+
+	return &cmv1.DeleteContactResponse{Success: true}, nil
 }
 
 func validateCreateContactRequest(req *cmv1.CreateContactRequest) error {
