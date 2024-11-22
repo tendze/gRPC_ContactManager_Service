@@ -67,9 +67,9 @@ func (s *serverAPI) CreateContact(
 	if err := validatePhone(req.GetPhone()); err != nil {
 		return nil, err
 	}
-	creatorEmail, ok := ctx.Value(emailContextKey).(string)
-	if !ok {
-		return nil, status.Error(codes.Internal, "cannot get user email")
+	creatorEmail, err := getEmailFromContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 	uid, err := s.cm.CreateContact(ctx, creatorEmail, req.GetName(), req.GetEmail(), req.GetPhone())
 	if err != nil {
@@ -88,8 +88,24 @@ func (s *serverAPI) GetContactByName(
 	if req.GetName() == "" {
 		return nil, status.Error(codes.InvalidArgument, "name required")
 	}
+	creatorEmail, err := getEmailFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	return &cmv1.GetContactResponse{}, nil
+	contact, err := s.cm.GetContactByName(ctx, creatorEmail, req.GetName())
+	if err != nil {
+		if errors.Is(err, cm.ErrContactNotFound) {
+			return nil, status.Error(codes.NotFound, "contact not found")
+		}
+		return nil, status.Error(codes.Internal, "cannot find contact")
+	}
+	return &cmv1.GetContactResponse{
+		Id:    contact.ID,
+		Name:  contact.Name,
+		Email: contact.Email,
+		Phone: contact.Phone,
+	}, nil
 }
 
 func (s *serverAPI) GetContactByEmail(
@@ -153,4 +169,13 @@ func validatePhone(phone string) error {
 		return status.Error(codes.InvalidArgument, "invalid phone format")
 	}
 	return nil
+}
+
+// Extracts email from context
+func getEmailFromContext(ctx context.Context) (string, error) {
+	creatorEmail, ok := ctx.Value(emailContextKey).(string)
+	if !ok {
+		return "", status.Error(codes.Internal, "cannot get user email")
+	}
+	return creatorEmail, nil
 }
