@@ -116,7 +116,24 @@ func (s *serverAPI) GetContactByEmail(
 		return nil, status.Error(codes.InvalidArgument, "email required")
 	}
 
-	return &cmv1.GetContactResponse{}, nil
+	creatorEmail, err := getEmailFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	contact, err := s.cm.GetContactByName(ctx, creatorEmail, req.GetEmail())
+	if err != nil {
+		if errors.Is(err, cm.ErrContactNotFound) {
+			return nil, status.Error(codes.NotFound, "contact not found")
+		}
+		return nil, status.Error(codes.Internal, "cannot find contact")
+	}
+	return &cmv1.GetContactResponse{
+		Id:    contact.ID,
+		Name:  contact.Name,
+		Email: contact.Email,
+		Phone: contact.Phone,
+	}, nil
 }
 
 func (s *serverAPI) GetContactByPhone(
@@ -127,7 +144,24 @@ func (s *serverAPI) GetContactByPhone(
 		return nil, status.Error(codes.InvalidArgument, "phone required")
 	}
 
-	return &cmv1.GetContactResponse{}, nil
+	creatorEmail, err := getEmailFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	contact, err := s.cm.GetContactByName(ctx, creatorEmail, req.GetPhone())
+	if err != nil {
+		if errors.Is(err, cm.ErrContactNotFound) {
+			return nil, status.Error(codes.NotFound, "contact not found")
+		}
+		return nil, status.Error(codes.Internal, "cannot find contact")
+	}
+	return &cmv1.GetContactResponse{
+		Id:    contact.ID,
+		Name:  contact.Name,
+		Email: contact.Email,
+		Phone: contact.Phone,
+	}, nil
 }
 
 func (s *serverAPI) DeleteContact(
