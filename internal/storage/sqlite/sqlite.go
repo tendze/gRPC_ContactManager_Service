@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"gRPC_ContactManagement_Service/internal/domain/models"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Storage struct {

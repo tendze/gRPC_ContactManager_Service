@@ -5,3 +5,11 @@ tasks:
     desc: "starts Contact Manager service"
     cmds:
       - go run ./cmd/contact-manager/main.go --config=./config/local.yaml
+  migrate-up:
+    desc: "applies migrations up"
+    cmds:
+      - go run ./cmd/migrator/main.go --storage-path=./storage/cm.db --migrations-path=./migrations
+  migrate-down:
+    desc: "applies migrations down"
+    cmds:
+      - go run ./cmd/migrator/main.go --storage-path=./storage/cm.db --migrations-path=./migrations --up=false

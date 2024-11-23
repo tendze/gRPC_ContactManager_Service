@@ -221,8 +221,10 @@ func validatePhone(phone string) error {
 // Extracts email from context
 func getEmailFromContext(ctx context.Context) (string, error) {
 	creatorEmail, ok := ctx.Value(emailContextKey).(string)
+
 	if !ok {
 		return "", status.Error(codes.Internal, "cannot get user email")
 	}
+
 	return creatorEmail, nil
 }
