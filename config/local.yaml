@@ -1,5 +1,15 @@
+# Contact manager
 env: "local"# dev, prod
-storage_path: "./storage/sso.db"
+storage_path: "./storage/cm.db"
 grpc:
-  port: 44044
+  port: 44045
   timeout: 10h
+
+# SSO client
+clients:
+  sso:
+    app_id: 1
+    address: "localhost:44044"
+    timeout: 1h
+    retries_count: 3
+    insecure: false

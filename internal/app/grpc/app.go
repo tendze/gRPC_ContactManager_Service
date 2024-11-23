@@ -14,13 +14,15 @@ type App struct {
 	port       int
 }
 
-// TODO: add new param CMService when you implement
 func New(
 	log *slog.Logger,
 	cm cmgrpc.ContactManager,
 	port int,
+	ssoInterceptor grpc.UnaryServerInterceptor,
 ) *App {
-	gRPC := grpc.NewServer()
+	gRPC := grpc.NewServer(
+		grpc.UnaryInterceptor(ssoInterceptor),
+	)
 	cmgrpc.Register(gRPC, cm)
 	return &App{
 		log:        log,

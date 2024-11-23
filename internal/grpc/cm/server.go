@@ -12,7 +12,7 @@ import (
 	"regexp"
 )
 
-const emailContextKey = "email"
+const emailContextKey = "creatorEmail"
 
 type ContactManager interface {
 	CreateContact(
@@ -121,7 +121,7 @@ func (s *serverAPI) GetContactByEmail(
 		return nil, err
 	}
 
-	contact, err := s.cm.GetContactByName(ctx, creatorEmail, req.GetEmail())
+	contact, err := s.cm.GetContactByEmail(ctx, creatorEmail, req.GetEmail())
 	if err != nil {
 		if errors.Is(err, cm.ErrContactNotFound) {
 			return nil, status.Error(codes.NotFound, "contact not found")
@@ -149,7 +149,7 @@ func (s *serverAPI) GetContactByPhone(
 		return nil, err
 	}
 
-	contact, err := s.cm.GetContactByName(ctx, creatorEmail, req.GetPhone())
+	contact, err := s.cm.GetContactByPhone(ctx, creatorEmail, req.GetPhone())
 	if err != nil {
 		if errors.Is(err, cm.ErrContactNotFound) {
 			return nil, status.Error(codes.NotFound, "contact not found")

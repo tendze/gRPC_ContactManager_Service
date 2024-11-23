@@ -3,8 +3,10 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"gRPC_ContactManagement_Service/internal/domain/models"
+	"gRPC_ContactManagement_Service/internal/storage"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -69,8 +71,9 @@ func (s *Storage) Contact(
 	row := stmt.QueryRowContext(ctx, creatorEmail, param)
 	var contact models.Contact
 	err = row.Scan(&contact.Name, &contact.Email, &contact.Phone)
-	if err != nil {
-		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return models.Contact{}, fmt.Errorf("%s: %w", op, storage.ErrContactNotFound)
 	}
 
 	return contact, nil

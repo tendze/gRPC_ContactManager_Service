@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"gRPC_ContactManagement_Service/internal/app"
+	ssogrpc "gRPC_ContactManagement_Service/internal/clients/sso/grpc"
 	"gRPC_ContactManagement_Service/internal/config"
 	"gRPC_ContactManagement_Service/internal/lib/logger/handlers/slogpretty"
 	"log/slog"
@@ -24,8 +26,22 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log.Info("logger setup")
 
+	// TODO: init auth client
+	authClient, err := ssogrpc.New(
+		context.Background(),
+		log,
+		cfg.Clients.SSO.Address,
+		cfg.Clients.SSO.Timeout,
+		cfg.Clients.SSO.RetriesCount,
+	)
+
+	if err != nil {
+		panic(err)
+	}
+	authClientInterceptor := ssogrpc.SSOMiddleware(authClient, cfg.Clients.SSO.AppID)
+
 	// TODO: INIT APP
-	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath)
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, authClientInterceptor)
 	go application.GRPCSrv.MustRun()
 
 	stop := make(chan os.Signal, 1)
