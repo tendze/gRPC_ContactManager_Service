@@ -48,5 +48,4 @@ func main() {
 		}
 		fmt.Println("down migrations applied")
 	}
-
 }

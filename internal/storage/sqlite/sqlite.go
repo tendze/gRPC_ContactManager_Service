@@ -25,14 +25,55 @@ func (s *Storage) SaveContact(
 	ctx context.Context,
 	creatorEmail, name, email, phone string,
 ) (uid int64, err error) {
-	panic("implement me")
+	const op = "sqlite.SaveContact"
+
+	stmt, err := s.db.Prepare("INSERT INTO contacts(creator_email, name, email, phone) VALUES(?, ?, ?, ?)")
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	res, err := stmt.ExecContext(ctx, creatorEmail, name, email, phone)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	return id, nil
 }
 
 func (s *Storage) Contact(
 	ctx context.Context,
 	creatorEmail, name, email, phone string,
 ) (models.Contact, error) {
-	panic("implement me")
+	const op = "sqlite.Contact"
+
+	var query, param string
+	if name != "" {
+		query = "SELECT name, email, phone FROM contacts WHERE creator_email = ? AND name = ?"
+		param = name
+	} else if email != "" {
+		query = "SELECT name, email, phone FROM contacts WHERE creator_email = ? AND email = ?"
+		param = email
+	} else {
+		query = "SELECT name, email, phone FROM contacts WHERE creator_email = ? AND phone = ?"
+		param = phone
+	}
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	row := stmt.QueryRowContext(ctx, creatorEmail, param)
+	var contact models.Contact
+	err = row.Scan(&contact.Name, &contact.Email, &contact.Phone)
+	if err != nil {
+		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return contact, nil
 }
 
 func (s *Storage) DeleteContact(
@@ -40,5 +81,17 @@ func (s *Storage) DeleteContact(
 	creatorEmail string,
 	id int64,
 ) error {
-	panic("implement me")
+	const op = "sqlite.DeleteContact"
+
+	stmt, err := s.db.Prepare("DELETE FROM contacts WHERE creator_email = ? AND id = ?")
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = stmt.ExecContext(ctx, creatorEmail, id)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
