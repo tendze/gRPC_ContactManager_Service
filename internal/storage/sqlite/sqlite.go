@@ -79,6 +79,32 @@ func (s *Storage) Contact(
 	return contact, nil
 }
 
+func (s *Storage) ContactById(
+	ctx context.Context,
+	id int64,
+) (models.Contact, error) {
+	const op = "sqlite.ContactById"
+	query := "SELECT id FROM contacts WHERE id = ?"
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return models.Contact{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	row := stmt.QueryRowContext(ctx, id)
+	var contact models.Contact
+	err = row.Scan(&contact.Name, &contact.Email, &contact.Phone)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return models.Contact{}, fmt.Errorf("%s: %w", op, storage.ErrContactNotFound)
+	}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return models.Contact{}, fmt.Errorf("%s: %w", op, storage.ErrContactNotFound)
+	}
+
+	return contact, nil
+}
+
 func (s *Storage) DeleteContact(
 	ctx context.Context,
 	creatorEmail string,
